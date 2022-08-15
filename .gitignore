@@ -1,4 +1,5 @@
 venv
-temp
+temp/uploads/*
 depends/new_mn_outputs
+temp/outputs/*
 # depends
