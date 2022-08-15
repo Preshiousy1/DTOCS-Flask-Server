@@ -1,0 +1,15 @@
+                                      duration  ...     act_type_brd
+ID                                              ...                 
+MN_525_C_LH_031_1_C_LP_1_72625319   362.992193  ...         LH_STOPE
+MN_475_C_LH_028_1_C_LP_1_d72db506    83.430000  ...         LH_STOPE
+MN_400_R_RP_024_1_R_LP_13_97a9033e   28.800000  ...  DES_LAT_ESTERIL
+MN_475_G_GB_038_1_E_LP_23_11650871   14.426945  ...  DES_LAT_ESTERIL
+MN_450_G_GB_018_1_O_LP_5_7319d9a9    20.000000  ...  DES_LAT_MINERAL
+...                                        ...  ...              ...
+MN_425_C_LH_024_4_C_LP_1_fe934aad     0.000000  ...            OTROS
+MN_450_C_LH_024_4_C_LP_1_3586dc73     0.000000  ...       PROD_DRILL
+MN_450_C_LH_024_4_C_LP_1_61598fa4   113.049583  ...         LH_STOPE
+MN_450_C_LH_023_4_C_LP_1_ed88a835    48.000000  ...            OTROS
+MN_450_C_LH_024_4_C_LP_1_a2deee58    48.000000  ...            OTROS
+
+[2437 rows x 20 columns]
