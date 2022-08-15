@@ -1,6 +1,6 @@
 
 from distutils.log import debug
-from flask import Flask, session, request
+from flask import Flask, session, request, render_template
 import os
 from werkzeug.utils import secure_filename
 
@@ -24,6 +24,11 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Members API Route
+
+
+@app.route("/")
+def index():
+    return render_template("index.html", token="DTOCSFlask")
 
 
 @app.route("/upload_csv", methods=['POST'])
