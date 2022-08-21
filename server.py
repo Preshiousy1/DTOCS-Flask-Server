@@ -1,6 +1,7 @@
 
+import ctypes
 from distutils.log import debug
-from flask import Flask, session, request, render_template
+from flask import Flask, session, request, render_template, send_file
 import os
 from werkzeug.utils import secure_filename
 
@@ -31,6 +32,12 @@ def index():
     return render_template("index.html", token="DTOCSFlask")
 
 
+@app.route("/download_file")
+def download_file():
+    location = request.args.get('location', '')
+    return send_file(location, as_attachment=True)
+
+
 @app.route("/upload_csv", methods=['POST'])
 def upload_csv():
     target = os.path.join(UPLOAD_FOLDER, 'uploads')
@@ -48,6 +55,8 @@ def upload_csv():
 @app.route("/send_data", methods=['POST'])
 def process_data():
 
+    # return {"days": request.json['days']}
+
     # ###### Quality of life improvements
     # Determine save path. Option to further parametrize when solving multiple instances. For example, define parameters for scheduling horizon, discount rate, and scheduling fidelity. Vary the parameter values and create the files, with the option to call OMP from the script itself and store each instances' files in a separate folder.
 
@@ -58,8 +67,13 @@ def process_data():
 
     print(file_path)
 
+    now = str(datetime.datetime.now())
+    now = ''.join(e for e in now if e.isalnum())
+    print("Now string : ", now)
+    dpath = "temp/outputs/"+now
+
     # Create file path to create a folder and save results to said folder
-    save_path = file_path/"temp/outputs"
+    save_path = file_path/dpath
     save_path.mkdir(exist_ok=True)
 
     print(save_path)
@@ -73,12 +87,12 @@ def process_data():
     #__DPM_file__ = "DPM_params.csv""./temp/uploads/NMN_Reserve_Export.csv"
 
     # Start date for the schedule, i.e., when to start scheduling
-    sched_start = "01-01-2022"
+    sched_start = request.json['date']
     sched_sm, sched_sd, sched_sy = sched_start.split('-')
     schedule_s = datetime.datetime(int(sched_sy), int(sched_sm), int(sched_sd))
 
     # Scheduling horizon in days (2 years for this project)
-    schedule_horizon = 1824
+    schedule_horizon = int(request.json['days'])
 
     # Calculate Schedule End
     schedule_e = schedule_s + \
@@ -101,57 +115,44 @@ def process_data():
 
     # Define a tuple of relevant columns
     # Column names refer to the actual Deswik column names
-    columns = (
-        'ID',
-        'Duration hours',
-        'GANANCIA TOTAL ($)',
-        'Start',
-        'DESARROLLO (m) BASAL',
-        'DESARROLLO (m) ESTERIL',
-        'DESARROLLO (m) RAMPA',
-        'LVL_BACKFILL',
-        'LVL_DEVELOPMENT (m)',
-        'LVL_EXTRACCION_MINERAL (Tn)',
-        'DE METROS PERFORADOS (m)',
-        'Predecessor details',
-        'Finish',
-        'Rate',
-        'NIVEL',
-        'SOT_ACT_TYPE',
-        'ID_LABOR',
-        'Driving property',
-        'RESBIN',
-        'Resources'
+    # columns = (
+    #     'ID',
+    #     'Duration hours',
+    #     'GANANCIA TOTAL ($)',
+    #     'Start',
+    #     'DESARROLLO (m) BASAL',
+    #     'DESARROLLO (m) ESTERIL',
+    #     'DESARROLLO (m) RAMPA',
+    #     'LVL_BACKFILL',
+    #     'LVL_DEVELOPMENT (m)',
+    #     'LVL_EXTRACCION_MINERAL (Tn)',
+    #     'DE METROS PERFORADOS (m)',
+    #     'Predecessor details',
+    #     'Finish',
+    #     'Rate',
+    #     'NIVEL',
+    #     'SOT_ACT_TYPE',
+    #     'ID_LABOR',
+    #     'Driving property',
+    #     'RESBIN',
+    #     'Resources'
 
-    )
+    # )
 
+    columns = request.json['columns']
+    coltypes = request.json['datatype']
+
+    for col in coltypes:
+        coltypes[col] = float if coltypes[col] == 'float' else str
+
+    print("Column Types : ", coltypes)
     # In[5]:
 
     # Read in the data file and clean up
     data = pd.read_csv(file_path/deswik_file,
                        usecols=columns,
                        index_col='ID',
-                       dtype={'ID': str,
-                              'Duration hours': float,
-                              'GANANCIA TOTAL ($)': float,
-                              'Start': str,
-                              'DESARROLLO (m) ESTERIL': float,
-                              'DESARROLLO (m) RAMPA': float,
-                              'DESARROLLO (m) BASAL': float,
-                              'LVL_BACKFILL': float,
-                              'LVL_DEVELOPMENT (m)': float,
-                              'LVL_EXTRACCION_MINERAL (Tn)': float,
-                              'DE METROS PERFORADOS (m)': float,
-                              'Predecessor details': str,
-                              'Finish': str,
-                              'Rate': str,
-                              'NIVEL': str,
-                              'SOT_ACT_TYPE': str,
-                              'ID_LABOR': str,
-                              'Driving property': str,
-                              'RESBIN': str,
-                              'Resources': str
-                              },
+                       dtype=coltypes,
                        parse_dates=['Start', 'Finish'],
                        na_filter=False
                        )
@@ -170,27 +171,7 @@ def process_data():
     # In[7]:
 
     # Rename columns
-    data = data.rename(columns={
-        'Duration hours': "duration",
-        'GANANCIA TOTAL ($)': "profit",
-        'DESARROLLO (m) BASAL': "prim_dev",
-        'DESARROLLO (m) ESTERIL': "waste_dev",
-        'DESARROLLO (m) RAMPA': "ramp_dev",
-        'LVL_BACKFILL': "lvl_backfill",
-        'LVL_DEVELOPMENT (m)': "lvl_dev",
-        'LVL_EXTRACCION_MINERAL (Tn)': "lvl_ore_t",
-        'DE METROS PERFORADOS (m)': "production_drill",
-        'Predecessor details': "preds",
-        'SOT_ACT_TYPE': "act_type_brd",
-        'ID_LABOR': "act_type",
-        'Start': "start",
-        'Finish': "finish",
-        'NIVEL': "Level",
-        'Rate': "rate",
-        'Driving property': "d_prop",
-        'RESBIN': "min_reserve",
-        'Resources': "resources"
-    })
+    data = data.rename(columns=request.json['rename'])
 
     print(data.head())
 
@@ -219,7 +200,10 @@ def process_data():
     levels = tuple(activities.Level.unique())
 
     active_levels = pd.DataFrame(0, index=pd.date_range(
-        schedule_s, periods=1824).to_list(), columns=levels)
+        schedule_s, periods=int(request.json['days'])).to_list(), columns=levels)
+    # schedule_s, periods=1824).to_list(), columns=levels)
+
+    print("Active Levels : ", active_levels)
 
     for index, row in activities.iterrows():
         add = pd.date_range(start=row.start.date(),
@@ -895,6 +879,15 @@ def process_data():
         w.write('CONSTRAINT: 37 40 P * L 100\n')
         w.write('CONSTRAINT: 38 41 P * L 100\n')
         w.write('CONSTRAINT: 39 42 P * L 100\n')
+
+    file_list = []
+    if os.path.exists(save_path):
+        for root, dirs, files in os.walk(save_path):
+            for file in files:
+                file_list.append(os.path.join(root, file))
+    # return file_list
+    response = {"status": "success", "files": file_list}
+    return response
 
 
 if __name__ == "__main__":
