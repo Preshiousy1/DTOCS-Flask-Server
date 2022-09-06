@@ -76,6 +76,9 @@ def process_data():
     save_path = file_path/dpath
     save_path.mkdir(exist_ok=True)
 
+    if not os.path.isdir(save_path):
+        os.mkdir(save_path)
+
     print(save_path)
 
     # Set parameters for the Deswik file, schedule start date, scheduling horizon, schedule end date, and scheduling fidelity.
