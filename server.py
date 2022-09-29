@@ -199,24 +199,24 @@ def process_data():
 
     # In[9]:
 
-    activities = data.loc[:, ('Level', 'start', 'finish')]
-    levels = tuple(activities.Level.unique())
+    # activities = data.loc[:, ('Level', 'start', 'finish')]
+    # levels = tuple(activities.Level.unique())
 
-    active_levels = pd.DataFrame(0, index=pd.date_range(
-        schedule_s, periods=int(request.json['days'])).to_list(), columns=levels)
-    # schedule_s, periods=1824).to_list(), columns=levels)
+    # active_levels = pd.DataFrame(0, index=pd.date_range(
+    #     schedule_s, periods=int(request.json['days'])).to_list(), columns=levels)
+    # # schedule_s, periods=1824).to_list(), columns=levels)
 
-    print("Active Levels : ", active_levels)
+    # print("Active Levels : ", active_levels)
 
-    for index, row in activities.iterrows():
-        add = pd.date_range(start=row.start.date(),
-                            end=row.finish.date(),
-                            freq='1D')
-        active_levels.loc[add, row.Level] += 1
+    # for index, row in activities.iterrows():
+    #     add = pd.date_range(start=row.start.date(),
+    #                         end=row.finish.date(),
+    #                         freq='1D')
+    #     active_levels.loc[add, row.Level] += 1
 
-    result = pd.DataFrame(np.select([active_levels > 0], [
-                          1], 0)).sum(axis=1).to_frame()
-    result[0].value_counts()
+    # result = pd.DataFrame(np.select([active_levels > 0], [
+    #                       1], 0)).sum(axis=1).to_frame()
+    # result[0].value_counts()
 
     # In[10]:
 
